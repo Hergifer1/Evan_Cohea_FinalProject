@@ -2,59 +2,99 @@ import pygame
 import random
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self):
         super().__init__()
         
         #Running
         self.running_frames = [
-            pygame.image.load('Dino_Running1').convert_alpha(),
-            pygame.image.load('Dino_Running2').convert_alpha()
+            pygame.image.load('Dino_Running1.png').convert_alpha(),
+            pygame.image.load('Dino_Running2.png').convert_alpha()
         ]
         self.running_frames = [pygame.transform.scale(frame, (100, 100)) for frame in self.running_frames]
         
         #Ducking
-        duck_frames = [
+        self.duck_frames = [
             pygame.image.load('Dino_Ducking1.png').convert_alpha(),
             pygame.image.load('Dino_Ducking2.png').convert_alpha()
         ]
-        for sprite in duck_frames:
-            sprite = pygame.transform.scale(sprite, (100, 100))
+        self.duck_frames = [pygame.transform.scale(frame, (100, 100)) for frame in self.duck_frames]
         
         #Standing
-        Dino = pygame.image.load('Dino_Standing.png')
-        Dino = pygame.transform.scale(Dino, (100, 100))
-        Dino_rect = Dino.get_rect()
-        Dino_rect.bottomleft = (0, 400)
+        self.Dino_stand = pygame.image.load('Dino_Standing.png').convert_alpha()
+        self.Dino_stand = pygame.transform.scale(self.Dino_stand, (100, 100))
+
+        self.frame = 0
+        self.animation_speed = 0.2
         
+        self.x = 0
+        self.y = 325
+        self.ground_y = self.y
+        
+        self.velocity_y = 0
+        self.gravity = 1
+        self.jump_strength = -18
+        self.is_jumping = False
+
+    def jump(self):
+        if not self.is_jumping:
+            self.velocity_y = self.jump_strength
+            self.is_jumping = True
+    
+    def update(self):
+        if self.is_jumping:
+            self.velocity_y += self.gravity
+            self.y += self.velocity_y
+
+            if self.y >= self.ground_y:
+                self.y = self.ground_y
+                self.velocity_y = 0
+                self.is_jumping = False
+
+    def draw(self, screen):
+        if self.is_jumping:
+            screen.blit(self.Dino_stand, (self.x, self.y))
+        else:
+            current_frame = self.running_frames[int(self.frame)]
+            screen.blit(current_frame, (self.x, self.y))
+
+            self.frame += self.animation_speed
+            if self.frame >= len(self.running_frames):
+                self.frame = 0
+
 def main():
     pygame.init()
     pygame.display.set_caption("Dinosaur Game")
     screen = pygame.display.set_mode((800, 500))
     clock = pygame.time.Clock()
     running = True
-    frame = 0
-    animation_speed = 0.5
-    x, y = 0, 400
-    player = Player(x, y)
+
+    player = Player()
     
-    #Dino = pygame.image.load('Dino_Standing.png')
-    #Dino = pygame.transform.scale(Dino, (100, 100))
-    
-    #Dino_rect = Dino.get_rect()
-    #Dino_rect.bottomleft = (0, 400)
+
     while running:
         screen.fill((0, 0, 0))
 
         for event in pygame.event.get():
+            
+        #Quitting
             if event.type == pygame.QUIT:
                 running = False
 
-        frame += animation_speed
-        if frame >= len(player.running_frames):
-            frame = 0
+        #Jummping
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    player.jump()
+        
+        player.update()
+        player.draw(screen)
 
-        current_frame = player.running_frames[int(frame)]
-        screen.blit(current_frame, (x, y))
+        #Animate Dino
+        '''if not player.is_jumping:
+            current_frame = player.running_frames[int(frame)]
+            frame += animation_speed
+            if frame >= len(player.running_frames):
+                frame = 0
+            screen.blit(current_frame, (player.x, player.y))'''
         
         pygame.display.flip()
         clock.tick(60)
