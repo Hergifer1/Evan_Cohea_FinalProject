@@ -13,11 +13,11 @@ class Player(pygame.sprite.Sprite):
         self.running_frames = [pygame.transform.scale(frame, (100, 100)) for frame in self.running_frames]
         
         #Ducking
-        self.duck_frames = [
+        self.ducking_frames = [
             pygame.image.load('Dino_Ducking1.png').convert_alpha(),
             pygame.image.load('Dino_Ducking2.png').convert_alpha()
         ]
-        self.duck_frames = [pygame.transform.scale(frame, (100, 100)) for frame in self.duck_frames]
+        self.ducking_frames = [pygame.transform.scale(frame, (100, 100)) for frame in self.ducking_frames]
         
         #Standing
         self.Dino_stand = pygame.image.load('Dino_Standing.png').convert_alpha()
@@ -26,7 +26,7 @@ class Player(pygame.sprite.Sprite):
         self.frame = 0
         self.animation_speed = 0.2
         
-        self.x = 0
+        self.x = 30
         self.y = 325
         self.ground_y = self.y
         
@@ -34,6 +34,7 @@ class Player(pygame.sprite.Sprite):
         self.gravity = 1
         self.jump_strength = -18
         self.is_jumping = False
+        self.is_ducking = False
 
     def jump(self):
         if not self.is_jumping:
@@ -50,9 +51,26 @@ class Player(pygame.sprite.Sprite):
                 self.velocity_y = 0
                 self.is_jumping = False
 
+    def duck(self):
+            if not self.is_jumping and not self.is_ducking:
+                self.is_ducking = True
+
+    def notduck(self):
+        if self.is_ducking:
+            self.is_ducking = False
+
     def draw(self, screen):
         if self.is_jumping:
             screen.blit(self.Dino_stand, (self.x, self.y))
+        
+        elif self.is_ducking:
+            current_frame = self.ducking_frames[int(self.frame)]
+            screen.blit(current_frame, (self.x, self.y))
+
+            self.frame += self.animation_speed
+            if self.frame >= len(self.ducking_frames):
+                self.frame = 0
+        
         else:
             current_frame = self.running_frames[int(self.frame)]
             screen.blit(current_frame, (self.x, self.y))
@@ -82,20 +100,20 @@ def main():
 
         #Jummping
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
+                if event.key == pygame.K_UP:
                     player.jump()
+
+                if event.key == pygame.K_DOWN:
+                    player.duck()
+                    
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_DOWN:
+                    player.notduck()
         
         player.update()
         player.draw(screen)
 
-        #Animate Dino
-        '''if not player.is_jumping:
-            current_frame = player.running_frames[int(frame)]
-            frame += animation_speed
-            if frame >= len(player.running_frames):
-                frame = 0
-            screen.blit(current_frame, (player.x, player.y))'''
-        
+        #Animate Dino       
         pygame.display.flip()
         clock.tick(60)
 if __name__ == "__main__":
