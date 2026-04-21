@@ -79,6 +79,61 @@ class Player(pygame.sprite.Sprite):
             if self.frame >= len(self.running_frames):
                 self.frame = 0
 
+class Obstacle(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+
+        #Cacti
+        self.cacti = [
+            pygame.image.load('Cactus_1.png').convert_alpha(),
+            pygame.image.load('Cactus_2.png').convert_alpha(),
+            pygame.image.load('Duo_Cactus.png').convert_alpha(),
+            pygame.image.load('Trio_Cactus.png').convert_alpha()
+            ]
+        self.cacti = [pygame.transform.scale(frame, (100, 100)) for frame in self.cacti]
+
+        #Pterodactyl
+        self.Pterodactyl = [
+            pygame.image.load('Ptero_1.png').convert_alpha(),
+            pygame.image.load('Ptero_2.png').convert_alpha()
+        ]
+        self.Pterodactyl = [pygame.transform.scale(frame, (100, 100)) for frame in self.Pterodactyl]
+
+        self.dead = False
+        self.x = 800
+        self.pos = (self.x, 325)
+        self.frame = 0
+
+        def update(self):
+            self.x += 10
+            if self.x <= 0:
+                self.dead = True
+                self.x = 800
+
+        def draw(self, screen):
+            if self.dead:
+                return
+            obstacle = random.randint(1, 4)
+            screen.blit(self.cacti[obstacle], self.pos)
+
+
+class move_obstacle():
+    def __init__(self, pos):
+        self.pos = pos
+        self.obstacles = []
+        
+    def update(self):
+        obstacle = Obstacle()
+        self.obstacles.append(obstacle)
+        self.update_pos()
+
+    def update_pos(self):
+        x, y = self.pos
+        x += 10
+        self.pos = (x, y)
+
+    def draw(self):
+
 def main():
     pygame.init()
     pygame.display.set_caption("Dinosaur Game")
