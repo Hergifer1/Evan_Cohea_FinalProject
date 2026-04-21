@@ -36,6 +36,12 @@ class Player(pygame.sprite.Sprite):
         self.is_jumping = False
         self.is_ducking = False
 
+    def player_rect(self):
+        if self.is_ducking:    
+            return pygame.Rect(self.x + 20, self.y + 50, 80, 60)
+        else:
+            return pygame.Rect(self.x + 20, self.y + 20, 80, 80)
+
     def jump(self):
         if not self.is_jumping:
             self.velocity_y = self.jump_strength
@@ -117,6 +123,12 @@ class Obstacle(pygame.sprite.Sprite):
         self.y =  345
         self.ptero_height = random.randint(200, 340)
  
+    def obstacle_rect(self):
+        if self.ptero_chance == 3:
+            return pygame.Rect(self.x + 20, self.ptero_height + 20, 70, 60)
+        else:
+            return pygame.Rect(self.x + 5, self.y + 10, 80, 80)
+
     def update(self, speed):
         self.x -= speed
   
@@ -176,6 +188,14 @@ def main():
 
             if obstacle.is_off_screen():
                 obstacles.remove(obstacle)
+
+        #Check collision
+        player_rect = player.player_rect()
+        for obstacle in obstacles:
+            if player_rect.colliderect(obstacle.obstacle_rect()):
+                running = False
+        
+        #Checking for events
         for event in pygame.event.get():
             
         #Quitting
@@ -197,7 +217,7 @@ def main():
         player.update()
         player.draw(screen)
 
-        #Animate Dino       
+        #Animate Dino              
         pygame.display.flip()
         clock.tick(60)
 if __name__ == "__main__":
