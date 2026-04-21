@@ -84,13 +84,21 @@ class Obstacle(pygame.sprite.Sprite):
         super().__init__()
 
         #Cacti
-        self.cacti = [
-            pygame.image.load('Cactus_1.png').convert_alpha(),
-            pygame.image.load('Cactus_2.png').convert_alpha(),
-            pygame.image.load('Duo_Cactus.png').convert_alpha(),
-            pygame.image.load('Trio_Cactus.png').convert_alpha()
-            ]
-        self.cacti = [pygame.transform.scale(frame, (100, 100)) for frame in self.cacti]
+        self.cacti1 = pygame.image.load('Cactus_1.png').convert_alpha()
+        self.cacti1 = pygame.transform.scale(self.cacti1, (80, 80))
+
+        self.cacti2 = pygame.image.load('Cactus_2.png').convert_alpha()
+        self.cacti2 = pygame.transform.scale(self.cacti2, (80, 80))
+
+        self.cactiDuo = pygame.image.load('Cactus_Duo.png').convert_alpha()
+        self.cactiDuo = pygame.transform.scale(self.cactiDuo, (80, 80))
+
+        self.cactiTrio = pygame.image.load('Cactus_Trio.png').convert_alpha()
+        self.cactiTrio = pygame.transform.scale(self.cactiTrio, (80, 80))
+
+        self.cacti = [self.cacti1, self.cacti2, self.cactiDuo, self.cactiTrio]
+
+        self.cact = random.choice(self.cacti)
 
         #Pterodactyl
         self.Pterodactyl = [
@@ -99,47 +107,46 @@ class Obstacle(pygame.sprite.Sprite):
         ]
         self.Pterodactyl = [pygame.transform.scale(frame, (100, 100)) for frame in self.Pterodactyl]
 
-        self.dead = False
-        self.x = 800
-        self.pos = (self.x, 325)
+        self.ptero_chance = random.randint(1, 5)
+
         self.frame = 0
-
-        def update(self):
-            self.x += 10
-            if self.x <= 0:
-                self.dead = True
-                self.x = 800
-
-        def draw(self, screen):
-            if self.dead:
-                return
-            obstacle = random.randint(1, 4)
-            screen.blit(self.cacti[obstacle], self.pos)
+        self.animation_speed = 0.05
 
 
-class move_obstacle():
-    def __init__(self, pos):
-        self.pos = pos
-        self.obstacles = []
-        
-    def update(self):
-        obstacle = Obstacle()
-        self.obstacles.append(obstacle)
-        self.update_pos()
+        self.x = 800
+        self.y =  345
+        self.ptero_height = random.randint(200, 340)
+ 
+    def update(self, speed):
+        self.x -= speed
+  
+    def draw(self, screen):
+        if self.ptero_chance == 3:
+            current_frame = self.Pterodactyl[int(self.frame)]
+            screen.blit(current_frame, (self.x, self.ptero_height))
 
-    def update_pos(self):
-        x, y = self.pos
-        x += 10
-        self.pos = (x, y)
+            self.frame += self.animation_speed
+            if self.frame >= len(self.Pterodactyl):
+                self.frame = 0
 
-    def draw(self):
+        else:
+            screen.blit(self.cact, (self.x, self.y))
 
+    def is_off_screen(self):
+        return self.x < -100
+    
 def main():
     pygame.init()
     pygame.display.set_caption("Dinosaur Game")
     screen = pygame.display.set_mode((800, 500))
     clock = pygame.time.Clock()
     running = True
+    obstacles = []
+    
+    last_spawn = 0
+    spawn_delay = random.randint(1500, 3000)
+    
+    game_speed = 9
 
     player = Player()
     
@@ -147,6 +154,28 @@ def main():
     while running:
         screen.fill((0, 0, 0))
 
+        #Sets obstacle spawn rate
+        current_time = pygame.time.get_ticks()
+
+        if current_time - last_spawn > spawn_delay:
+            obstacles.append(Obstacle())
+            last_spawn = current_time
+
+            # pick a new random delay for the next spawn
+            spawn_delay = random.randint(800, 1500)
+
+        #Increments speed of obstacles
+        game_speed += 0.002
+        
+        if game_speed > 20:
+            game_speed = 20
+        
+        for obstacle in obstacles[:]:
+            obstacle.update(game_speed)
+            obstacle.draw(screen)
+
+            if obstacle.is_off_screen():
+                obstacles.remove(obstacle)
         for event in pygame.event.get():
             
         #Quitting
