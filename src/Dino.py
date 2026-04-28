@@ -199,7 +199,6 @@ def main():
             #display clock
             time = (pygame.time.get_ticks() - rewind_time) // 100
             timer = gamefont.render(f'{time}', True, (125, 125, 125))
-            #screen.blit(timer, (750, 20))
 
             #Sets obstacle spawn rate
             current_time = pygame.time.get_ticks()
