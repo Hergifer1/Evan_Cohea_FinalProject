@@ -7,6 +7,7 @@ gamefont2 = pygame.font.SysFont("Lucida Console", 16)
 gamestart = gamefont.render("Press Space to Start", True, (125, 125, 125))
 gameover = gamefont.render("Game Over", True, (125, 125, 125))
 retry = gamefont2.render("Press 'r' to try again or 'q' to quit", True, (125, 125, 125))
+scores = []
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -227,7 +228,7 @@ def main():
         for obstacle in obstacles:
             if player_rect.colliderect(obstacle.obstacle_rect()):
                 over = True
-
+                
         #Checking for events
         for event in pygame.event.get():
             
@@ -265,9 +266,13 @@ def main():
         
         timer_rect = timer.get_rect(topright=(780, 20))
         screen.blit(timer, timer_rect)
+        
         if over:
             screen.blit(gameover, (300, 250))
             screen.blit(retry, (200, 280))
+            scores.append(time)
+            high_score = gamefont2.render(f"High Score: {max(scores)}", True, (125, 125, 125))
+            screen.blit(high_score, (310, 300))
         
         #Animate Dino              
         pygame.display.flip()
