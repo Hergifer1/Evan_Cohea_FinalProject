@@ -1,8 +1,13 @@
 import pygame
 import random
+
 pygame.font.init()
 gamefont = pygame.font.SysFont("Lucida Console", 32)
-font = gamefont.render("Press Space to Start", True, (125, 125, 125))
+retryfont = pygame.font.SysFont("Lucida Console", 16)
+gamestart = gamefont.render("Press Space to Start", True, (125, 125, 125))
+gameover = gamefont.render("Game Over", True, (125, 125, 125))
+retry = retryfont.render("Press 'r' to try again or 'q' to quit", True, (125, 125, 125))
+
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -67,7 +72,7 @@ class Player(pygame.sprite.Sprite):
         if self.is_ducking:
             self.is_ducking = False
 
-    def draw(self, screen):
+    def draw(self, screen, over=False):
         if self.is_jumping:
             screen.blit(self.Dino_stand, (self.x, self.y))
         
@@ -75,17 +80,19 @@ class Player(pygame.sprite.Sprite):
             current_frame = self.ducking_frames[int(self.frame)]
             screen.blit(current_frame, (self.x, self.y))
 
-            self.frame += self.animation_speed
-            if self.frame >= len(self.ducking_frames):
-                self.frame = 0
+            if not over:
+                self.frame += self.animation_speed
+                if self.frame >= len(self.ducking_frames):
+                    self.frame = 0
         
         else:
             current_frame = self.running_frames[int(self.frame)]
             screen.blit(current_frame, (self.x, self.y))
 
-            self.frame += self.animation_speed
-            if self.frame >= len(self.running_frames):
-                self.frame = 0
+            if not over:
+                self.frame += self.animation_speed
+                if self.frame >= len(self.running_frames):
+                    self.frame = 0
 
 class Obstacle(pygame.sprite.Sprite):
     def __init__(self):
@@ -134,14 +141,15 @@ class Obstacle(pygame.sprite.Sprite):
     def update(self, speed):
         self.x -= speed
   
-    def draw(self, screen):
+    def draw(self, screen, over=False):
         if self.ptero_chance == 3:
             current_frame = self.Pterodactyl[int(self.frame)]
             screen.blit(current_frame, (self.x, self.ptero_height))
 
-            self.frame += self.animation_speed
-            if self.frame >= len(self.Pterodactyl):
-                self.frame = 0
+            if not over:
+                self.frame += self.animation_speed
+                if self.frame >= len(self.Pterodactyl):
+                    self.frame = 0
 
         else:
             screen.blit(self.cact, (self.x, self.y))
@@ -156,6 +164,7 @@ def main():
     clock = pygame.time.Clock()
     running = False
     start = True
+    over = False
     obstacles = []
     
     last_spawn = 0
@@ -170,7 +179,7 @@ def main():
     
     while start:
         screen.fill((0, 0, 0))
-        screen.blit(font, (200, 250))
+        screen.blit(gamestart, (200, 250))
         screen.blit(Dino_start, (27, 340))
         
         for event in pygame.event.get():
@@ -183,57 +192,70 @@ def main():
     while running:
         screen.fill((0, 0, 0))
 
-        #Sets obstacle spawn rate
-        current_time = pygame.time.get_ticks()
+        if not over:
+            #Sets obstacle spawn rate
+            current_time = pygame.time.get_ticks()
 
-        if current_time - last_spawn > spawn_delay:
-            obstacles.append(Obstacle())
-            last_spawn = current_time
+            if current_time - last_spawn > spawn_delay:
+                obstacles.append(Obstacle())
+                last_spawn = current_time
 
-            # pick a new random delay for the next spawn
-            spawn_delay = random.randint(800, 1500)
+                # pick a new random delay for the next spawn
+                spawn_delay = random.randint(800, 1500)
 
-        #Increments speed of obstacles
-        game_speed += 0.002
+            #Increments speed of obstacles
+            game_speed += 0.002
+            if game_speed > 20:
+                game_speed = 20
         
-        if game_speed > 20:
-            game_speed = 20
-        
-        for obstacle in obstacles[:]:
-            obstacle.update(game_speed)
-            obstacle.draw(screen)
+            for obstacle in obstacles[:]:
+                obstacle.update(game_speed)
+                obstacle.draw(screen, over)
 
-            if obstacle.is_off_screen():
-                obstacles.remove(obstacle)
+                if obstacle.is_off_screen():
+                    obstacles.remove(obstacle)
 
+            player.update()
         #Check collision
         player_rect = player.player_rect()
         for obstacle in obstacles:
             if player_rect.colliderect(obstacle.obstacle_rect()):
-                running = False
-        
+                over = True
+
         #Checking for events
         for event in pygame.event.get():
             
         #Quitting
             if event.type == pygame.QUIT:
                 running = False
+            if over:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_r:
+                        main()
+                        return
+                    if event.key == pygame.K_q:
+                        running = False
 
-        #Jummping
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    player.jump()
+        #Character controls
+            if not over:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        player.jump()
 
-                if event.key == pygame.K_DOWN:
-                    player.duck()
+                    if event.key == pygame.K_DOWN:
+                        player.duck()
                     
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_DOWN:
-                    player.notduck()
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_DOWN:
+                        player.notduck()
         
-        player.update()
-        player.draw(screen)
-
+        #player.update()
+        for obstacle in obstacles:
+            obstacle.draw(screen, over)
+        player.draw(screen, over)
+        if over:
+            screen.blit(gameover, (300, 250))
+            screen.blit(retry, (200, 280))
         #Animate Dino              
         pygame.display.flip()
         clock.tick(60)
