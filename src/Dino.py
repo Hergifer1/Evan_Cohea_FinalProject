@@ -3,10 +3,10 @@ import random
 
 pygame.font.init()
 gamefont = pygame.font.SysFont("Lucida Console", 32)
-retryfont = pygame.font.SysFont("Lucida Console", 16)
+gamefont2 = pygame.font.SysFont("Lucida Console", 16)
 gamestart = gamefont.render("Press Space to Start", True, (125, 125, 125))
 gameover = gamefont.render("Game Over", True, (125, 125, 125))
-retry = retryfont.render("Press 'r' to try again or 'q' to quit", True, (125, 125, 125))
+retry = gamefont2.render("Press 'r' to try again or 'q' to quit", True, (125, 125, 125))
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -46,8 +46,10 @@ class Player(pygame.sprite.Sprite):
     def player_rect(self):
         if self.is_ducking:    
             return pygame.Rect(self.x + 20, self.y + 50, 80, 60)
+        elif self.is_jumping:
+            return pygame.Rect(self.x + 20, self.y + 10, 70, 70)
         else:
-            return pygame.Rect(self.x + 20, self.y + 20, 80, 80)
+            return pygame.Rect(self.x + 20, self.y + 25, 70, 70)
 
     def jump(self):
         if not self.is_jumping:
@@ -165,6 +167,7 @@ def main():
     running = False
     start = True
     over = False
+    rewind_time = pygame.time.get_ticks()
     obstacles = []
     
     last_spawn = 0
@@ -193,15 +196,19 @@ def main():
         screen.fill((0, 0, 0))
 
         if not over:
+            #display clock
+            time = (pygame.time.get_ticks() - rewind_time) // 100
+            timer = gamefont.render(f'{time}', True, (125, 125, 125))
+            #screen.blit(timer, (750, 20))
+
             #Sets obstacle spawn rate
             current_time = pygame.time.get_ticks()
-
             if current_time - last_spawn > spawn_delay:
                 obstacles.append(Obstacle())
                 last_spawn = current_time
 
                 # pick a new random delay for the next spawn
-                spawn_delay = random.randint(800, 1500)
+                spawn_delay = random.randint(520, 1500)
 
             #Increments speed of obstacles
             game_speed += 0.002
@@ -249,13 +256,20 @@ def main():
                     if event.key == pygame.K_DOWN:
                         player.notduck()
         
-        #player.update()
+        #Draws obstacles after game over
         for obstacle in obstacles:
             obstacle.draw(screen, over)
+            pygame.draw.rect(screen, (0, 255, 0), obstacle.obstacle_rect(), 2) #DELETE LATER
+        
         player.draw(screen, over)
+        pygame.draw.rect(screen, (255, 0, 0), player.player_rect(), 2) #DELETE LATER
+        
+        timer_rect = timer.get_rect(topright=(780, 20))
+        screen.blit(timer, timer_rect)
         if over:
             screen.blit(gameover, (300, 250))
             screen.blit(retry, (200, 280))
+        
         #Animate Dino              
         pygame.display.flip()
         clock.tick(60)
