@@ -1,6 +1,8 @@
 import pygame
 import random
-
+pygame.font.init()
+gamefont = pygame.font.SysFont("Lucida Console", 32)
+font = gamefont.render("Press Space to Start", True, (125, 125, 125))
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -152,7 +154,8 @@ def main():
     pygame.display.set_caption("Dinosaur Game")
     screen = pygame.display.set_mode((800, 500))
     clock = pygame.time.Clock()
-    running = True
+    running = False
+    start = True
     obstacles = []
     
     last_spawn = 0
@@ -162,7 +165,21 @@ def main():
 
     player = Player()
     
+    Dino_start = pygame.image.load('Dino_Standing.png').convert_alpha()
+    Dino_start = pygame.transform.scale(Dino_start, (100, 100))
+    
+    while start:
+        screen.fill((0, 0, 0))
+        screen.blit(font, (200, 250))
+        screen.blit(Dino_start, (27, 340))
+        
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    running = True
+                    start = False
 
+        pygame.display.flip()
     while running:
         screen.fill((0, 0, 0))
 
