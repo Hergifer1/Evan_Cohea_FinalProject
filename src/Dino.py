@@ -1,6 +1,7 @@
 import pygame
 import random
 import math
+pygame.mixer.init()
 
 pygame.font.init()
 gamefont = pygame.font.SysFont("Lucida Console", 32)
@@ -11,6 +12,8 @@ retry = gamefont2.render("Press 'r' to try again or 'q' to quit", True, (125, 12
 scores = []
 width = 800
 height = 500
+jump_sound = pygame.mixer.Sound('Dino_jumpsound.mp3')
+hurt_sound = pygame.mixer.Sound('Dino_hurtsound.mp3')
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -238,12 +241,12 @@ def main():
                 scroll = 0
 
             player.update()
-        #Check collision
-        player_rect = player.player_rect()
-        for obstacle in obstacles:
-            if player_rect.colliderect(obstacle.obstacle_rect()):
-                over = True
-                
+            #Check collision
+            player_rect = player.player_rect()
+            for obstacle in obstacles:
+                if player_rect.colliderect(obstacle.obstacle_rect()):
+                    over = True
+                    hurt_sound.play()
         #Checking for events
         for event in pygame.event.get():
             
@@ -262,6 +265,7 @@ def main():
             if not over:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_UP:
+                        jump_sound.play()
                         player.jump()
 
                     if event.key == pygame.K_DOWN:
