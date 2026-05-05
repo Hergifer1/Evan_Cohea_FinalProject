@@ -1,5 +1,6 @@
 import pygame
 import random
+import math
 
 pygame.font.init()
 gamefont = pygame.font.SysFont("Lucida Console", 32)
@@ -8,6 +9,13 @@ gamestart = gamefont.render("Press Space to Start", True, (125, 125, 125))
 gameover = gamefont.render("Game Over", True, (125, 125, 125))
 retry = gamefont2.render("Press 'r' to try again or 'q' to quit", True, (125, 125, 125))
 scores = []
+width = 800
+height = 500
+
+#ground
+ground = pygame.image.load('Dino_Ground.png').convert_alpha()
+scroll = 0
+tiles = math.ceil(width / ground.get_width()) + 1
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -163,7 +171,7 @@ class Obstacle(pygame.sprite.Sprite):
 def main():
     pygame.init()
     pygame.display.set_caption("Dinosaur Game")
-    screen = pygame.display.set_mode((800, 500))
+    screen = pygame.display.set_mode((width, height))
     clock = pygame.time.Clock()
     running = False
     start = True
@@ -182,7 +190,7 @@ def main():
     Dino_start = pygame.transform.scale(Dino_start, (100, 100))
     
     while start:
-        screen.fill((0, 0, 0))
+        screen.fill((225, 225, 225))
         screen.blit(gamestart, (200, 250))
         screen.blit(Dino_start, (27, 340))
         
@@ -194,7 +202,7 @@ def main():
 
         pygame.display.flip()
     while running:
-        screen.fill((0, 0, 0))
+        screen.fill((225, 225, 225))
 
         if not over:
             #display clock
@@ -221,7 +229,16 @@ def main():
 
                 if obstacle.is_off_screen():
                     obstacles.remove(obstacle)
-
+            
+            #ground scrolling
+            while (i < tiles):
+                screen.blit(ground, (ground.get_width()*i + scroll, 200))
+                i += 1
+            
+            scroll -= 6
+            if abs(scroll) > ground.get_width():
+                scroll = 0
+                
             player.update()
         #Check collision
         player_rect = player.player_rect()
