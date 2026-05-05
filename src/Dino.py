@@ -14,6 +14,7 @@ width = 800
 height = 500
 jump_sound = pygame.mixer.Sound('Dino_jumpsound.mp3')
 hurt_sound = pygame.mixer.Sound('Dino_hurtsound.mp3')
+coin_sound = pygame.mixer.Sound('Dino_coinsound.mp3')
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -37,6 +38,7 @@ class Player(pygame.sprite.Sprite):
         self.Dino_stand = pygame.image.load('Dino_Standing.png').convert_alpha()
         self.Dino_stand = pygame.transform.scale(self.Dino_stand, (100, 100))
 
+        #variables
         self.frame = 0
         self.animation_speed = 0.2
         
@@ -60,6 +62,7 @@ class Player(pygame.sprite.Sprite):
 
     def jump(self):
         if not self.is_jumping:
+            jump_sound.play()
             self.velocity_y = self.jump_strength
             self.is_jumping = True
     
@@ -133,10 +136,9 @@ class Obstacle(pygame.sprite.Sprite):
 
         self.ptero_chance = random.randint(1, 5)
 
+        #variables
         self.frame = 0
         self.animation_speed = 0.05
-
-
         self.x = 800
         self.y =  345
         self.ptero_height = random.randint(200, 340)
@@ -165,7 +167,29 @@ class Obstacle(pygame.sprite.Sprite):
 
     def is_off_screen(self):
         return self.x < -100
-    
+
+class Coins(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+
+        #coin
+        self.coin = pygame.image.load('Dino_coin.png').convert_alpha()
+        self.coin = pygame.transform.scale(self.coin, (70, 70))
+        self.x = 800
+        self.coin_height = random.randint(200, 340)
+
+    def coin_rect(self):
+        return pygame.Rect(self.x + 20, self.coin_height + 20, 30, 30)
+        
+    def update(self, speed):
+        self.x -= speed
+
+    def draw(self, screen, over=False):
+        screen.blit(self.coin, (self.x, self.coin_height))
+
+    def is_off_screen(self):
+        return self.x < -100
+        
 def main():
     pygame.init()
     pygame.display.set_caption("Dinosaur Game")
@@ -176,9 +200,12 @@ def main():
     over = False
     rewind_time = pygame.time.get_ticks()
     obstacles = []
+    coins = []
     
-    last_spawn = 0
-    spawn_delay = random.randint(1500, 3000)
+    lastobs_spawn = 0
+    lastcoin_spawn = 0
+    obsspawn_delay = random.randint(1500, 3000)
+    coinspawn_delay = random.randint(4000, 8000)
     
     game_speed = 9
 
@@ -216,24 +243,42 @@ def main():
 
             #Sets obstacle spawn rate
             current_time = pygame.time.get_ticks()
-            if current_time - last_spawn > spawn_delay:
+            if current_time - lastobs_spawn > obsspawn_delay:
                 obstacles.append(Obstacle())
-                last_spawn = current_time
+                lastobs_spawn = current_time
 
-                # pick a new random delay for the next spawn
-                spawn_delay = random.randint(520, 1500)
+                #Sets random delay for the next spawn
+                obsspawn_delay = random.randint(520, 1500)
 
-            #Increments speed of obstacles
+            #Set coin spawn rate
+            coin_time = pygame.time.get_ticks()
+            if coin_time - lastcoin_spawn > coinspawn_delay:
+                coins.append(Coins())
+                lastcoin_spawn = current_time
+
+                #Sets random delay for the next spawn
+                coinspawn_delay = random.randint(4000, 8000)
+
+            #Increments speed of the game
             game_speed += 0.002
             if game_speed > 20:
                 game_speed = 20
-        
+
+            #Updates obstacles
             for obstacle in obstacles[:]:
                 obstacle.update(game_speed)
                 obstacle.draw(screen, over)
 
                 if obstacle.is_off_screen():
                     obstacles.remove(obstacle)
+
+            #Updates coins
+            for coin in coins[:]:
+                coin.update(game_speed)
+                coin.draw(screen, over)
+
+                if coin.is_off_screen():
+                    coins.remove(coin)
             
             #ground scrolling        
             scroll -= game_speed
@@ -247,6 +292,17 @@ def main():
                 if player_rect.colliderect(obstacle.obstacle_rect()):
                     over = True
                     hurt_sound.play()
+
+            for coin in coins:
+                if player_rect.colliderect(coin.coin_rect()):
+                    coin_sound.play()
+                    coins.remove(coin)
+                    rewind_time -= 10000
+
+                for obstacle in obstacles:
+                    if coin.coin_rect().colliderect(obstacle.obstacle_rect()):
+                        coins.remove(coin)
+
         #Checking for events
         for event in pygame.event.get():
             
@@ -265,7 +321,7 @@ def main():
             if not over:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_UP:
-                        jump_sound.play()
+                        
                         player.jump()
 
                     if event.key == pygame.K_DOWN:
@@ -283,10 +339,11 @@ def main():
         
         for obstacle in obstacles:
             obstacle.draw(screen, over)
-            pygame.draw.rect(screen, (0, 255, 0), obstacle.obstacle_rect(), 2) #DELETE LATER
         
-        player.draw(screen, over)
-        pygame.draw.rect(screen, (255, 0, 0), player.player_rect(), 2) #DELETE LATER     
+        for coin in coins:
+            coin.draw(screen, over)
+        
+        player.draw(screen, over)   
         
         timer_rect = timer.get_rect(topright=(780, 20))
         screen.blit(timer, timer_rect)
