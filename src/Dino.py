@@ -12,11 +12,6 @@ scores = []
 width = 800
 height = 500
 
-#ground
-ground = pygame.image.load('Dino_Ground.png').convert_alpha()
-scroll = 0
-tiles = math.ceil(width / ground.get_width()) + 1
-
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -54,11 +49,11 @@ class Player(pygame.sprite.Sprite):
 
     def player_rect(self):
         if self.is_ducking:    
-            return pygame.Rect(self.x + 20, self.y + 50, 80, 60)
+            return pygame.Rect(self.x + 10, self.y + 50, 80, 60)
         elif self.is_jumping:
-            return pygame.Rect(self.x + 20, self.y + 10, 70, 70)
+            return pygame.Rect(self.x + 20, self.y + 10, 65, 65)
         else:
-            return pygame.Rect(self.x + 20, self.y + 25, 70, 70)
+            return pygame.Rect(self.x + 20, self.y + 25, 65, 65)
 
     def jump(self):
         if not self.is_jumping:
@@ -147,7 +142,7 @@ class Obstacle(pygame.sprite.Sprite):
         if self.ptero_chance == 3:
             return pygame.Rect(self.x + 20, self.ptero_height + 20, 70, 60)
         else:
-            return pygame.Rect(self.x + 5, self.y + 10, 80, 80)
+            return pygame.Rect(self.x + 5, self.y + 10, 70, 70)
 
     def update(self, speed):
         self.x -= speed
@@ -184,6 +179,12 @@ def main():
     
     game_speed = 9
 
+    #ground
+    ground = pygame.image.load('Dino_Ground.png').convert_alpha()
+    scroll = 0
+    i = 0
+    tiles = math.ceil(width / ground.get_width()) + 1
+
     player = Player()
     
     Dino_start = pygame.image.load('Dino_Standing.png').convert_alpha()
@@ -193,7 +194,8 @@ def main():
         screen.fill((225, 225, 225))
         screen.blit(gamestart, (200, 250))
         screen.blit(Dino_start, (27, 340))
-        
+        screen.blit(ground, (ground.get_width()*i + scroll, 410))
+
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
@@ -230,15 +232,11 @@ def main():
                 if obstacle.is_off_screen():
                     obstacles.remove(obstacle)
             
-            #ground scrolling
-            while (i < tiles):
-                screen.blit(ground, (ground.get_width()*i + scroll, 200))
-                i += 1
-            
-            scroll -= 6
+            #ground scrolling        
+            scroll -= game_speed
             if abs(scroll) > ground.get_width():
                 scroll = 0
-                
+
             player.update()
         #Check collision
         player_rect = player.player_rect()
@@ -274,12 +272,17 @@ def main():
                         player.notduck()
         
         #Draws obstacles after game over
+        i = 0
+        while (i < tiles):
+            screen.blit(ground, (ground.get_width()*i + scroll, 410))
+            i += 1
+        
         for obstacle in obstacles:
             obstacle.draw(screen, over)
             pygame.draw.rect(screen, (0, 255, 0), obstacle.obstacle_rect(), 2) #DELETE LATER
         
         player.draw(screen, over)
-        pygame.draw.rect(screen, (255, 0, 0), player.player_rect(), 2) #DELETE LATER
+        pygame.draw.rect(screen, (255, 0, 0), player.player_rect(), 2) #DELETE LATER     
         
         timer_rect = timer.get_rect(topright=(780, 20))
         screen.blit(timer, timer_rect)
