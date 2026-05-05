@@ -238,7 +238,7 @@ def main():
 
         if not over:
             #display clock
-            time = (pygame.time.get_ticks() - rewind_time) // 100
+            time = (pygame.time.get_ticks() - rewind_time) // 1000
             timer = gamefont.render(f'{time}', True, (125, 125, 125))
 
             #Sets obstacle spawn rate
